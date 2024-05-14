@@ -1,0 +1,75 @@
+---
+- name: Secure Ubuntu Control Node
+  hosts: controlnode
+  become: yes
+
+  tasks:
+    # 1. Operating System Security
+    - name: Update and upgrade apt packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Install auditd
+      apt:
+        name: auditd
+        state: present
+
+    - name: Start and enable auditd service
+      service:
+        name: auditd
+        state: started
+        enabled: yes
+
+    - name: Ensure unattended-upgrades is installed
+      apt:
+        name: unattended-upgrades
+        state: present
+
+    - name: Enable unattended-upgrades
+      copy:
+        src: /usr/share/unattended-upgrades/20auto-upgrades
+        dest: /etc/apt/apt.conf.d/20auto-upgrades
+        owner: root
+        group: root
+        mode: '0644'
+
+    # 2. Application Security
+    - name: Install fail2ban
+      apt:
+        name: fail2ban
+        state: present
+
+    - name: Ensure fail2ban is running
+      service:
+        name: fail2ban
+        state: started
+        enabled: yes
+
+    # 3. Network Security
+    - name: Ensure UFW is installed
+      apt:
+        name: ufw
+        state: present
+
+    - name: Allow SSH through the firewall
+      ufw:
+        rule: allow
+        port: '22'
+        proto: tcp
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+
+    # 4. Backup and Recovery
+    - name: Create a backup of critical configuration files
+      copy:
+        src: /etc
+        dest: /var/backups/etc-backup
+        owner: root
+        group: root
+        mode: '0644'
+        remote_src: yes
+        force: yes
+

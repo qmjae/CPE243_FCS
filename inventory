@@ -1,0 +1,3 @@
+[controlnode]
+192.168.56.129 ansible_user=mj
+
